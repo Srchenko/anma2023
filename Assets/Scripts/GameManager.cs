@@ -100,6 +100,7 @@ public class GameManager : MonoBehaviour
                         if(tr.GetChild(x).name != "Total"){
                             tr.GetChild(x).GetComponent<BoxCollider2D>().enabled = true;
                             tr.GetChild(x).GetComponent<DragAndDrop>().enabled = false;
+                            tr.GetChild(x).GetComponentInChildren<TextMeshProUGUI>().color = new Color(0,0,0,0);
                         }
                     }
                 }

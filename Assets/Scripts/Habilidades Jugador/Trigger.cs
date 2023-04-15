@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using TMPro;
 
 public class Trigger : MonoBehaviour
 {
@@ -34,6 +35,16 @@ public class Trigger : MonoBehaviour
     }
 
     public void NumerosPuestos(){
+        for (int i = 0; i < dad.Length; i++)
+        {
+            if (cuadraditos[i].GetComponentInChildren<TextMeshProUGUI>().color == new Color (0,0,0,0)){
+                dad[i].enabled = false;
+            }
+            else{
+                dad[i].enabled = true;
+            }
+        }
+
         for (int i = 0; i < dad.Length; i++)
         {
             if (dad[i].enabled == true){
