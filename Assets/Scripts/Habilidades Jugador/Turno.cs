@@ -12,6 +12,12 @@ public class Turno : MonoBehaviour
     public HabilidadesEnemigas he;
 
     public void Desaparecer(){
+        GameManager.instance.stop_time = true;
+        if(GameManager.instance.nivel == 6){
+            if(GameManager.instance.cuadricula_jugador.GetChild(5).GetComponent<Trigger>().id == 11){
+                Debug.Log("no se usó el 729 de daño");
+            }
+        }
         if(GameManager.instance.turno_extra){
             GameManager.instance.VueltaTurnoJugador();
             return;

@@ -56,7 +56,16 @@ public class Habilidades : MonoBehaviour
     void Habilidad2(){
         total = int.Parse(cuadraditos[0].GetComponentInChildren<TextMeshProUGUI>().text) - 1;
         resultado.GetComponentInChildren<TextMeshProUGUI>().text = total.ToString();
+        bool retornar = false;
+        if(GameManager.instance.vidaJugadorActual == GameManager.instance.vidaJugadorMax){
+            retornar = true;
+        }
         GameManager.instance.ActualizarVidaJugador(-total);
+        if(retornar){
+            return;
+        }
+        total++;
+        Debug.Log("skill 2, value " + total);
     }
 
     void Habilidad3(){
@@ -80,8 +89,16 @@ public class Habilidades : MonoBehaviour
     void Habilidad6(){
         total = int.Parse(cuadraditos[0].GetComponentInChildren<TextMeshProUGUI>().text);
         resultado.GetComponentInChildren<TextMeshProUGUI>().text = total.ToString();
+        bool retornar = false;
+        if(GameManager.instance.vidaJugadorActual == GameManager.instance.vidaJugadorMax){
+            retornar = true;
+        }
         GameManager.instance.ActualizarVidaJugador(-total);
         GameManager.instance.ActualizarVidaEnemiga(total);
+        if(retornar){
+            return;
+        }
+        Debug.Log("skill 6, value " + total);
     }
 
     void Habilidad7(){
@@ -106,9 +123,16 @@ public class Habilidades : MonoBehaviour
                 if(total == 64){
                     GameManager.instance.boton_turno.GetComponentInChildren<TextMeshProUGUI>().text = "TURNO EXTRA";
                     GameManager.instance.turno_extra = true;
+                    Debug.Log("Buen turno extra");
                     return true;
                 }
                 else{
+                    if((int.Parse(cuadraditos[0].GetComponentInChildren<TextMeshProUGUI>().text) + int.Parse(cuadraditos[1].GetComponentInChildren<TextMeshProUGUI>().text)) == 16 && int.Parse(cuadraditos[2].GetComponentInChildren<TextMeshProUGUI>().text) == 4){
+                        Debug.Log("Mal turno extra");
+                    }
+                    if((int.Parse(cuadraditos[0].GetComponentInChildren<TextMeshProUGUI>().text) + int.Parse(cuadraditos[1].GetComponentInChildren<TextMeshProUGUI>().text)) == 8 && int.Parse(cuadraditos[2].GetComponentInChildren<TextMeshProUGUI>().text) == 8){
+                        Debug.Log("Mal turno extra");
+                    }
                     return false;
                 }
             case 9:
@@ -124,6 +148,7 @@ public class Habilidades : MonoBehaviour
                 total = int.Parse(cuadraditos[0].GetComponentInChildren<TextMeshProUGUI>().text) * int.Parse(cuadraditos[1].GetComponentInChildren<TextMeshProUGUI>().text) * int.Parse(cuadraditos[2].GetComponentInChildren<TextMeshProUGUI>().text);
                 if(total == 729){
                     GameManager.instance.ActualizarVidaEnemiga(729);
+                    Debug.Log("729 de daño");
                     return true;
                 }
                 else{

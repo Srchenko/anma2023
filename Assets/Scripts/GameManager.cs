@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using TMPro;
 using UnityEngine.UI;
+using Unity.Services.Analytics;
 
 public class GameManager : MonoBehaviour
 {
@@ -31,6 +32,10 @@ public class GameManager : MonoBehaviour
     public GameObject tutorial2;
     public bool turno_extra = false;
     public int max_num_enemigo = 10;
+    public int turno = 0;
+
+    public float time = 0;
+    public bool stop_time = false;
 
     private int[] vidaEnemigaExtraNivel = new int[] {20, 70, 80, 100, 100};
 
@@ -40,9 +45,13 @@ public class GameManager : MonoBehaviour
 
     public void ActualizarVidaEnemiga(int total){
         vidaEnemigaActual -= total;
-        if(vidaEnemigaActual < 0){
+        if(vidaEnemigaActual < 0 || vidaEnemigaActual == 0){
             vidaEnemigaActual = 0;
             boton_turno.GetComponent<Button>().interactable = false;
+            for (int i = 0; i < listado.childCount; i++)
+            {
+                listado.GetChild(i).GetComponent<DragAndDrop>().enabled = false;
+            }
         }
         StartCoroutine(EsperarEnemigo());
     }
@@ -51,9 +60,20 @@ public class GameManager : MonoBehaviour
         vida_enemiga.GetChild(0).GetComponent<Image>().fillAmount = 100.0f / vidaEnemigaMax * vidaEnemigaActual / 100.0f;
         vida_enemiga.GetChild(1).GetComponent<TextMeshProUGUI>().text = vidaEnemigaActual.ToString()+"/"+vidaEnemigaMax.ToString();
         if(vidaEnemigaActual == 0){
+            Debug.Log("terminaste nivel " + nivel + " en " + turno + " turnos.");
+            Debug.Log("terminaste nivel " + nivel + " en " + (int)time + " segundos.");
+            GameManager.instance.stop_time = true;
+            turno = 0;
+            time = 0;
             yield return new WaitForSeconds(1.2f);
             if(nivel == 6){
                 victoria_posta.gameObject.SetActive(true);
+                string nros = "";
+                for (int i = 0; i < cuadricula_jugador.childCount; i++)
+                {
+                    nros = nros + cuadricula_jugador.GetChild(i).GetComponent<Trigger>().id;
+                }
+                Debug.Log("Terminaste el juego con esta combinación: "+ int.Parse(nros));
             }
             else{
                 victoria.gameObject.SetActive(true);
@@ -77,12 +97,18 @@ public class GameManager : MonoBehaviour
         vida_jugador.GetChild(0).GetComponent<Image>().fillAmount = 100.0f / vidaJugadorMax * vidaJugadorActual / 100.0f;
         vida_jugador.GetChild(1).GetComponent<TextMeshProUGUI>().text = vidaJugadorActual.ToString()+"/"+vidaJugadorMax.ToString();
         if(vidaJugadorActual == 0){
+            Debug.Log("perdiste nivel " + nivel + " en " + turno + " turnos y el enemigo tenía " + vidaEnemigaActual + " de vida.");
+            GameManager.instance.stop_time = true;
+            turno = 0;
+            time = 0;
             yield return new WaitForSeconds(1.2f);
             derrota.gameObject.SetActive(true);
         }
     }
 
     public void VueltaTurnoJugador(){
+        GameManager.instance.stop_time = false;
+        turno++;
         turno_extra = false;
         boton_turno.GetComponentInChildren<TextMeshProUGUI>().text = "TERMINAR TURNO";
         max_num_enemigo = 10;
@@ -151,22 +177,34 @@ public class GameManager : MonoBehaviour
             victoria.GetChild(0).GetChild(siguiente_habilidad+2).gameObject.SetActive(true);
         }
 
+        Transform habilidad_elegida;
+
         if(obj.name == "Elegir1"){
             victoria.GetChild(0).GetChild(objetos_a_elegir[1]).gameObject.SetActive(false);
+            habilidad_elegida = victoria.GetChild(0).GetChild(objetos_a_elegir[0]);
             victoria.GetChild(0).GetChild(objetos_a_elegir[0]).SetParent(cuadricula_jugador);
         }
         else{
             victoria.GetChild(0).GetChild(objetos_a_elegir[0]).gameObject.SetActive(false);
+            habilidad_elegida = victoria.GetChild(0).GetChild(objetos_a_elegir[1]);
             victoria.GetChild(0).GetChild(objetos_a_elegir[1]).SetParent(cuadricula_jugador);
         }
+        nivel++;
+        Dictionary<string, object> habilidades_elegidas = new Dictionary<string, object>(){
+            {"indice_habilidad", habilidad_elegida.GetComponent<Trigger>().id},
+            {"indice_nivel", nivel}
+        };
 
-        cuadricula_enemiga.GetChild(nivel-1).gameObject.SetActive(false);
-        cuadricula_enemiga.GetChild(nivel).gameObject.SetActive(true);
-        vidaEnemigaMax += vidaEnemigaExtraNivel[nivel-1];
+        Debug.Log("level start " + nivel + ", skill " + habilidad_elegida.GetComponent<Trigger>().id);
+
+        //AnalyticsService.Instance.CustomData("habilidad_elegida_entre_nivel",habilidades_elegidas);
+
+        cuadricula_enemiga.GetChild(nivel-2).gameObject.SetActive(false);
+        cuadricula_enemiga.GetChild(nivel-1).gameObject.SetActive(true);
+        vidaEnemigaMax += vidaEnemigaExtraNivel[nivel-2];
         vidaJugadorMax += 10;
         vidaJugadorActual = vidaJugadorMax;
         vidaEnemigaActual = vidaEnemigaMax;
-        nivel++;
         vida_jugador.GetChild(0).GetComponent<Image>().fillAmount = 1;
         vida_jugador.GetChild(1).GetComponent<TextMeshProUGUI>().text = vidaJugadorActual.ToString()+"/"+vidaJugadorMax.ToString();
         vida_enemiga.GetChild(0).GetComponent<Image>().fillAmount = 1;
@@ -253,14 +291,23 @@ public class GameManager : MonoBehaviour
         }
     }
 
+    public void TiempoTuto(){
+        int tiempito = (int)time;
+        Debug.Log("el tuto se hizo en " + tiempito.ToString() + " segundos.");
+        Debug.Log("level start 1, skill 1");
+        time = 0;
+    }
+
     void Start()
     {
-        VueltaTurnoJugador();
+        //VueltaTurnoJugador();
     }
 
     // Update is called once per frame
     void Update()
     {
-        
+        if (!stop_time){
+            time += Time.deltaTime;
+        }
     }
 }
